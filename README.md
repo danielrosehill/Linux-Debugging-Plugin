@@ -1,23 +1,41 @@
-# Linux Crash Forensics
+# Linux Debugging
 
-A Claude Code plugin for instrumenting Linux workstations to capture hard crashes, freezes, and unexpected reboots — then running a systematic post-mortem when one happens.
+A Claude Code plugin for debugging Linux desktops — targeted journal/boot/log inspection skills, plus an idempotent installer that instruments the system with the proactive logging tools needed to catch hard crashes and analyze them after the fact.
 
-Ships an idempotent installer that configures the standard crash-capture stack (kdump, persistent journald, sysstat, pstore) plus a set of investigation skills that walk the AI agent through a structured forensic workflow.
+**Targets Ubuntu + Wayland desktops.** Most skills work on any systemd Linux; the install script assumes `apt`. Forkable for other distros.
 
-## What it installs
+## What it installs (proactive instrumentation)
+
+Run `scripts/install-debugging-stack.sh` once to set up:
 
 | Tool | Purpose |
 |---|---|
-| `linux-crashdump` (kdump-tools) | Captures full kernel core dumps on panic via kexec, writes to `/var/crash/` |
-| `sysstat` | Records CPU / memory / I/O / network every 10 min — `sar` lets you look back at system state right before the freeze |
-| Persistent journald | Makes `journalctl -b -1` survive reboot so logs are available after a crash |
-| `systemd-coredump` | Captures userspace segfault core dumps (usually already active on Debian/Ubuntu) |
-| `pstore` check | Verifies firmware-backed crash storage is available as a belt-and-braces fallback |
+| Persistent journald | `journalctl -b -1` survives reboot — logs available after a hard crash |
+| `linux-crashdump` (kdump-tools) | Full kernel core dumps on panic via kexec, written to `/var/crash/` |
+| `sysstat` | Records CPU / memory / I/O / network every 10 min — `sar` lets you look back at system state before a freeze |
+| `systemd-coredump` | Captures userspace segfault core dumps |
+| `pstore` check | Verifies firmware-backed crash storage as a belt-and-braces fallback |
+
+Userspace OOM protection (systemd-oomd / earlyoom) is handled separately by the `setup-oom-protection` skill.
 
 ## Skills
 
-- **`investigate-last-crash`** — Systematic post-mortem: enumerate boots, identify the crash window, collect kernel + userspace evidence, correlate with sar metrics, write a findings report.
-- **`setup-netconsole`** — Configure netconsole to stream kernel oops messages over UDP to another LAN host, for capturing freezes that leave no local log trail.
+### Live debugging
+
+- **`journal-inspect`** — Targeted `journalctl` queries by unit, time, priority, kernel scope, with structured/JSON output for AI analysis. The default replacement for `journalctl -xe`.
+- **`boot-inspect`** — Failed units, `systemd-analyze blame/critical-chain`, kernel boot messages, boot-to-boot diff. Wayland session services included.
+- **`log-inspect`** — Non-journal log sources: app state dirs (`~/.cache`, `~/.local/state`), `/var/log/*`, dpkg/apt history, snap/flatpak. Uses ripgrep + jq for AI-friendly output.
+
+### Memory & OOM
+
+- **`setup-oom-protection`** — Configure systemd-oomd (Ubuntu 22.04+) or earlyoom so the desktop kills runaway processes before the kernel hard-locks under memory pressure.
+- **`inspect-oom-events`** — Find past OOM kills (kernel + oomd + earlyoom) in the journal and reconstruct what was running, correlated with sar memory/swap data.
+
+### Persistent logging & crash forensics
+
+- **`validate-persistent-journal`** — Verify `/var/log/journal` is active so logs survive reboot. Configure if not. Precondition for any post-crash investigation.
+- **`investigate-last-crash`** — Systematic post-mortem after a hard crash: enumerate boots, identify the crash window, collect kernel + userspace evidence, correlate with sar metrics, write a findings report.
+- **`setup-netconsole`** — Stream kernel oops messages over UDP to another LAN host, for capturing freezes that leave no local log trail.
 - **`review-pstore`** — Inspect `/sys/fs/pstore` for firmware-saved panic logs that survive reboots.
 
 ## Installation
@@ -25,38 +43,31 @@ Ships an idempotent installer that configures the standard crash-capture stack (
 From the Claude Code marketplace:
 
 ```bash
-claude plugins install danielrosehill/Linux-Crash-Forensics-Plugin
+claude plugins install linux-debugging@danielrosehill
 ```
 
-Then run the install script to set up the diagnostic stack on your machine:
+Then, optionally, run the proactive instrumentation installer:
 
 ```bash
-bash ~/.claude/plugins/<path>/scripts/install-crash-forensics.sh
-```
-
-Or clone and run directly:
-
-```bash
-git clone https://github.com/danielrosehill/Linux-Crash-Forensics-Plugin
-cd Linux-Crash-Forensics-Plugin
-bash scripts/install-crash-forensics.sh
+git clone https://github.com/danielrosehill/Linux-Debugging-Plugin
+cd Linux-Debugging-Plugin
+bash scripts/install-debugging-stack.sh
 ```
 
 A reboot is required for kdump to become active.
 
 ## Usage
 
-After a crash, start a Claude Code session and invoke the investigation skill:
+Invoke skills naturally in a Claude Code session:
 
+> "Inspect the journal for errors in the last hour"
+> "Why is boot taking 45 seconds?"
+> "Set up OOM protection on this machine"
 > "Investigate the last crash"
-
-The agent will walk through the boot list, pull kernel dumps, correlate with sar data, and write a dated findings report.
-
-For systems where crashes leave no local trace, run the `setup-netconsole` skill to stream kernel messages to another host.
 
 ## Supported platforms
 
-Debian / Ubuntu (tested on Ubuntu 25.10 with KDE Plasma). The install script detects `apt`; other distros will need a manual port.
+Ubuntu (tested on Ubuntu 25.10 with KDE Plasma on Wayland). Most skills are systemd-portable; the install script is `apt`-only. Fork and adapt the installer for other distros.
 
 ## License
 

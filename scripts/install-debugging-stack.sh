@@ -4,9 +4,9 @@
 
 set -euo pipefail
 
-log() { printf '\033[1;34m[crash-forensics]\033[0m %s\n' "$*"; }
-warn() { printf '\033[1;33m[crash-forensics]\033[0m %s\n' "$*" >&2; }
-err() { printf '\033[1;31m[crash-forensics]\033[0m %s\n' "$*" >&2; }
+log() { printf '\033[1;34m[linux-debugging]\033[0m %s\n' "$*"; }
+warn() { printf '\033[1;33m[linux-debugging]\033[0m %s\n' "$*" >&2; }
+err() { printf '\033[1;31m[linux-debugging]\033[0m %s\n' "$*" >&2; }
 
 if [[ $EUID -eq 0 ]]; then
   SUDO=""

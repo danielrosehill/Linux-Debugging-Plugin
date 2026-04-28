@@ -1,12 +1,12 @@
 {
-  "name": "linux-crash-forensics",
-  "version": "1.0.0",
-  "description": "Installs crash diagnostic tooling (kdump, persistent journald, sysstat) and provides skills for investigating Linux crashes and freezes",
+  "name": "linux-debugging",
+  "version": "2.0.0",
+  "description": "Linux desktop debugging toolkit — targeted journal/boot/log inspection skills plus proactive logging instrumentation (persistent journald, kdump, sysstat, OOM protection) so AI agents can analyze hard crashes, freezes, and runtime issues. Targets Ubuntu + Wayland; forkable for other distros.",
   "author": {
     "name": "Daniel Rosehill",
     "url": "https://github.com/danielrosehill"
   },
-  "repository": "https://github.com/danielrosehill/Linux-Crash-Forensics-Plugin",
+  "repository": "https://github.com/danielrosehill/Linux-Debugging-Plugin",
   "license": "MIT",
-  "keywords": ["linux", "crash", "diagnostics", "forensics", "sysadmin", "kdump", "debugging"]
+  "keywords": ["linux", "debugging", "journalctl", "systemd", "ubuntu", "wayland", "logging", "oom", "kdump", "sysadmin"]
 }

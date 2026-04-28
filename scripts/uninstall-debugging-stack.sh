@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Reverse the crash-forensics install on Debian/Ubuntu.
+# Reverse the linux-debugging install on Debian/Ubuntu.
 # Does NOT delete /var/crash or /var/log/journal contents.
 
 set -euo pipefail
 
-log() { printf '\033[1;34m[crash-forensics]\033[0m %s\n' "$*"; }
+log() { printf '\033[1;34m[linux-debugging]\033[0m %s\n' "$*"; }
 
 if [[ $EUID -eq 0 ]]; then SUDO=""; else SUDO="sudo"; fi
 
